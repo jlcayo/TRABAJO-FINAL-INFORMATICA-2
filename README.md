@@ -1,4 +1,4 @@
-# TRABAJO-FINAL-INFORMATICA-2
+# TRABAJO FINAL - INFORMATICA 2
 ## Proyecto Final - Control de Acceso con Arduino y Processing
 ### Integrantes
 - José Cayo
