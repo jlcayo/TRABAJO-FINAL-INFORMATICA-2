@@ -1,3 +1,4 @@
+//probando cambios
 #include <SPI.h>          // Librería para comunicación SPI
 #include <MFRC522.h>      // Librería del lector RFID RC522
 
