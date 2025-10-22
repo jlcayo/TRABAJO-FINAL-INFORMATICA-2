@@ -4,6 +4,8 @@
 
 #define SS_PIN 10          // Pin para SDA (selección de esclavo)
 #define RST_PIN 9          // Pin de reset del módulo RFID
+#define LedVerde 6        //Conectamos led rojo 
+#define LedRojo 7         //conectamos led verde
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Crea el objeto del lector RFID
 
@@ -12,6 +14,8 @@ void setup() {
   SPI.begin();             // Inicia comunicación SPI
   mfrc522.PCD_Init();      // Inicializa el lector RFID
   Serial.println("Acerca una tarjeta...");  // Mensaje de inicio
+  pinMode(LedRojo, OUTPUT);
+  pinMode(LedVerde, OUTPUT);
 }
 
 void loop() {
@@ -28,7 +32,13 @@ void loop() {
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     Serial.print(mfrc522.uid.uidByte[i], HEX);
   }
-
   Serial.println();  // Salto de línea para la siguiente lectura
-  delay(1000);       // Espera 1 segundo antes de leer otra tarjeta
+  
+  digitalWrite(LedRojo, LOW);
+  digitalWrite(LedVerde, HIGH);
+  delay(3000);       // Espera 3 segundo antes de leer otra tarjeta
+
+  digitalWrite(LedVerde, LOW);
+  digitalWrite(LedRojo, HIGH);
+  
 }
