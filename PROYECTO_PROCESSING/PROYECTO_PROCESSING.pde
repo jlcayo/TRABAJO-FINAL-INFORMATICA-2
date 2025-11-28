@@ -14,6 +14,9 @@ String ultimoEstado = "";
 
 ControlP5 cp5;
 
+String faseRegistro = "";
+Textfield nombreField, cargoField;
+
 void setup() {
   size(1104, 630);
   printArray(Serial.list()); // Muestra los puertos seriales disponibles
@@ -36,6 +39,16 @@ void setup() {
     .setPosition(850, 290)
     .setSize(220, 60)
     .setCaptionLabel("LISTAR TARJETAS");
+    
+  nombreField = cp5.addTextfield("Nombre")
+    .setPosition(width/2-100, height/2)
+    .setSize(200, 40)
+    .setVisible(false);
+
+  cargoField = cp5.addTextfield("Cargo")
+    .setPosition(width/2-100, height/2)
+    .setSize(200, 40)
+    .setVisible(false);  
 }
 
 void draw() {
@@ -71,6 +84,45 @@ void draw() {
   if (ultimoNombre != "") {
     text("Nombre: " + ultimoNombre, 50, 140);
     text("Cargo: " + ultimoCargo, 50, 170);
+  }
+  
+  // Overlays según fase
+  if (faseRegistro.equals("tarjeta")) {
+    fill(0, 150);
+    rect(0, 0, width, height);
+    fill(255);
+    rect(width/2 - 200, height/2 - 150, 400, 300, 20);
+    fill(0);
+    textAlign(CENTER);
+    text("MODO REGISTRO\nACERQUE LA TARJETA...", width/2, height/2);
+  }
+
+  if (faseRegistro.equals("nombre")) {
+    fill(0, 150);
+    rect(0, 0, width, height);
+    fill(255);
+    rect(width/2 - 200, height/2 - 150, 400, 300, 20);
+    fill(0);
+    textAlign(CENTER);
+    text("INGRESE NOMBRE Y PRESIONE ENTER", width/2, height/2 - 40);
+    nombreField.setVisible(true);
+    nombreField.setFocus(true);
+  } else {
+    nombreField.setVisible(false);
+  }
+
+  if (faseRegistro.equals("cargo")) {
+    fill(0, 150);
+    rect(0, 0, width, height);
+    fill(255);
+    rect(width/2 - 200, height/2 - 150, 400, 300, 20);
+    fill(0);
+    textAlign(CENTER);
+    text("INGRESE CARGO Y PRESIONE ENTER", width/2, height/2 - 40);
+    cargoField.setVisible(true);
+    cargoField.setFocus(true);
+  } else {
+    cargoField.setVisible(false);
   }
 }
 
@@ -120,6 +172,38 @@ void serialEvent(Serial myPort) {
       ultimoID = parts[1];
       ultimoNombre = "";
       ultimoCargo = "";
+    }else if (inputString.equals("MODO REGISTRO ACTIVADO. Acerca la tarjeta a registrar")) {
+      faseRegistro = "tarjeta";
+    }else if (inputString.equals("INGRESE EL NOMBRE:")) {
+      faseRegistro = "nombre";
+    }else if (inputString.equals("INGRESE EL CARGO:")) {
+      faseRegistro = "cargo";
+    }else if (inputString.startsWith("TARJETA REGISTRADA")) {
+      faseRegistro = "";
+      nombreField.clear();
+      cargoField.clear();
+      nombreField.setVisible(false);
+      cargoField.setVisible(false);
+      println("Registro Completado");
+    }
+  }
+}
+
+void keyPressed() {
+  if (faseRegistro.equals("nombre") && key == ENTER) {
+    String nombre = nombreField.getText();
+    if (nombre.length() > 0) {
+      myPort.write(nombre + "\n");
+      println("Nombre enviado: " + nombre);
+      nombreField.clear();
+    }
+  }
+  if (faseRegistro.equals("cargo") && key == ENTER) {
+    String cargo = cargoField.getText();
+    if (cargo.length() > 0) {
+      myPort.write(cargo + "\n");
+      println("Cargo enviado: " + cargo);
+      cargoField.clear();
     }
   }
 }
