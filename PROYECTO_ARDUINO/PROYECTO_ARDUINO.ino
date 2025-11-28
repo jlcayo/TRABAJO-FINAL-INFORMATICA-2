@@ -33,40 +33,33 @@ void setup() {
 }
 
 void loop() {
-  // Si no hay una nueva tarjeta, vuelve al inicio del loop
-  if (!mfrc522.PICC_IsNewCardPresent()) return;
+  // Si no hay una nueva tarjeta o no lee, vuelve al inicio del loop
+  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
 
-  // Si no puede leer la tarjeta, vuelve al inicio del loop
-  if (!mfrc522.PICC_ReadCardSerial()) return;
-
-  // Si la tarjeta se detecta correctamente:
-  //Serial.print("Tarjeta detectada: ");
-
-  // Muestra en el monitor serie el ID (UID) de la tarjeta
-  //for (byte i = 0; i < mfrc522.uid.size; i++) {
-    //Serial.print(mfrc522.uid.uidByte[i], HEX);
-  //}
-  //Serial.println();  // Salto de línea para la siguiente lectura
-  
-    // Si la tarjeta se detecta correctamente:
   Serial.print("Tarjeta detectada: ");
   String idTarjeta = "";
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     idTarjeta += (mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
     idTarjeta += String(mfrc522.uid.uidByte[i], HEX);
   }
+  idTarjeta.toUpperCase();
   Serial.println(idTarjeta);  // Muestra el ID de la tarjeta
 
-  digitalWrite(LedRojo, LOW);
-  digitalWrite(LedVerde, HIGH);
-
-  servo.write(90); //abre la puerta a 90 grados
-
-  delay(3000);       // Espera 3 segundo antes de leer otra tarjeta
-
-  servo.write(0); //cierra la puerta 
-
-  digitalWrite(LedVerde, LOW);
-  digitalWrite(LedRojo, HIGH);
-  
+  if (idTarjeta == "432A4B1A") { //Probamos con tajeta maestra
+    Serial.println("ACCESO TARJETA MAESTRA");
+    digitalWrite(LedRojo, LOW);
+    digitalWrite(LedVerde, HIGH);
+    servo.write(90);
+    delay(3000);
+    servo.write(0);
+    digitalWrite(LedVerde, LOW);
+  } else {
+    Serial.println("ACCESO DENEGADO");
+    digitalWrite(LedRojo, HIGH);
+    digitalWrite(LedVerde, LOW);
+    delay(3000);
+    digitalWrite(LedRojo, LOW);
+  }
 }
