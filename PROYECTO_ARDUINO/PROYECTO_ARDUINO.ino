@@ -44,38 +44,21 @@ void setup() {
 }
 
 void loop() {
-  /* Si no hay una nueva tarjeta o no lee, vuelve al inicio del loop
-  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
-    return;
-  }*/
-
-  /*Serial.print("Tarjeta detectada: ");
-  String idTarjeta = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-    idTarjeta += (mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
-    idTarjeta += String(mfrc522.uid.uidByte[i], HEX);
-  }
-  idTarjeta.toUpperCase();
-  Serial.println(idTarjeta);  // Muestra el ID de la tarjeta
-
-  if (idTarjeta == "432A4B1A") { //Probamos con tajeta maestra
-    Serial.println("ACCESO TARJETA MAESTRA");
-    digitalWrite(LedRojo, LOW);
-    digitalWrite(LedVerde, HIGH);
-    servo.write(90);
-    delay(3000);
-    servo.write(0);
-    digitalWrite(LedVerde, LOW);
-  } else {
-    Serial.println("ACCESO DENEGADO");
-    digitalWrite(LedRojo, HIGH);
-    digitalWrite(LedVerde, LOW);
-    delay(3000);
-    digitalWrite(LedRojo, LOW);
-  }*/
-  if (Serial.available() > 0) {
-    int opcion = Serial.readStringUntil('\n').toInt();
-    procesarComando(opcion);
+ if (Serial.available() > 0) {
+    String comando = Serial.readStringUntil('\n');
+    comando.trim();
+    if (comando == "99") {
+      abrirPuerta();
+    } else if (comando == "DENY") {
+      digitalWrite(ledRojo, HIGH);
+      delay(3000);
+      digitalWrite(ledRojo, LOW);
+    } else {
+      int opcion = comando.toInt();
+      if (opcion > 0) {
+        procesarComando(opcion);
+      }
+    }
   }
 
   String idTarjeta = leerTarjeta();
@@ -103,6 +86,9 @@ void procesarComando(int opcion) {
     case 3:
       listarTarjetas();
       break;
+    case 99:
+      abrirPuerta();
+      break;
     default:
       Serial.println("Opcion no valida, ingrese un numero del 1 al 3");
       mostrarMenu();
@@ -113,6 +99,7 @@ String leerTarjeta() {
   if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
     return "";
   }
+
   String idTarjeta = "";
   for (byte i = 0; i < mfrc522.uid.size; i++) {
     idTarjeta += (mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
@@ -120,40 +107,16 @@ String leerTarjeta() {
   }
   idTarjeta.toUpperCase();
   Serial.println("TARJETA DETECTADA");
+  mfrc522.PICC_HaltA();
+  mfrc522.PCD_StopCrypto1();
+  
   return idTarjeta;
 }
 
 void verificarAcceso(String id) {
-  if (id == tarjetaMaestra) {
-    Serial.println("ACCESO TARJETA MAESTRA");
-    digitalWrite(ledRojo, LOW);
-    digitalWrite(ledVerde, HIGH);
-    servo.write(90);
-    delay(3000);
-    servo.write(0);
-  } else {
-    int indice = buscarTarjeta(id);
-    if (indice != -1) {
-      Serial.print("NOMBRE: ");
-      Serial.println(tarjetasHabilitadas[indice].nombre);
-      Serial.print("CARGO: ");
-      Serial.println(tarjetasHabilitadas[indice].cargo);
-      Serial.println("ACCESO PERMITIDO");
-      digitalWrite(ledRojo, LOW);
-      digitalWrite(ledVerde, HIGH);
-      servo.write(90);
-      delay(3000);
-      servo.write(0);
-    } else {
-      Serial.println("ACCESO DENEGADO.");
-      digitalWrite(ledRojo, HIGH);
-      digitalWrite(ledVerde, LOW);
-      delay(2000);
-      digitalWrite(ledRojo, LOW);
-      digitalWrite(ledVerde, LOW);
-    }
-  }
+  Serial.println("UID: " + id);
 }
+ 
 
 int buscarTarjeta(String id) {
   for (int i = 0; i < numTarjetas; i++) {
@@ -211,6 +174,7 @@ void registrarTarjeta() {
   Serial.print(nombre);
   Serial.print(", ");
   Serial.println(cargo);
+  Serial.println("OK:" + idTarjeta + ":" + nombre + ":" + cargo);
 }
 
 void eliminarTarjeta() {
@@ -229,23 +193,8 @@ void eliminarTarjeta() {
     }
     delay(100);
   }
-
-  int indice = buscarTarjeta(idTarjeta);
-  if (indice == -1) {
-    Serial.println("TARJETA NO ENCONTRADA");
-    return;
-  }
-
-  Serial.print("TARJETA DE ");
-  Serial.print(tarjetasHabilitadas[indice].nombre);
-  Serial.print(" (");
-  Serial.print(tarjetasHabilitadas[indice].cargo);
-  Serial.println(") ELIMINADA");
-
-  for (int i = indice; i < numTarjetas - 1; i++) {
-    tarjetasHabilitadas[i] = tarjetasHabilitadas[i + 1];
-  }
-  numTarjetas--;
+  Serial.println("DEL:" + idTarjeta);
+  Serial.println("Tarjeta de " + idTarjeta + " ELIMINADA");
 }
 
 void listarTarjetas() {
@@ -264,4 +213,14 @@ void listarTarjetas() {
       Serial.println("-------------");
     }
   }
+}
+
+void abrirPuerta() {
+  digitalWrite(ledRojo, LOW);
+  digitalWrite(ledVerde, HIGH);
+  servo.write(75);
+  delay(3000);
+  servo.write(0);
+  digitalWrite(ledRojo, LOW);
+  digitalWrite(ledVerde, LOW);
 }
