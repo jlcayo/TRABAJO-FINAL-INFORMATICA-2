@@ -142,7 +142,7 @@ void listarTarjetas() {
   Serial.println("TARJETAS REGISTRADAS:");
 }
 
-void abrirPuerta() {
+void abrirPuerta(){
   digitalWrite(buzzerPin, HIGH)
   digitalWrite(ledRojo, LOW);
   digitalWrite(ledVerde, HIGH);
